@@ -4,6 +4,7 @@ import (
 	"context"
 	"docker/internal/messagesService" // Импортируем наш сервис
 	"docker/internal/web/messages"
+	"errors"
 
 	"gorm.io/gorm"
 )
@@ -76,18 +77,31 @@ func (h *Handler) GetMessages(_ context.Context, _ messages.GetMessagesRequestOb
 func (h *Handler) PostMessages(_ context.Context, request messages.PostMessagesRequestObject) (messages.PostMessagesResponseObject, error) {
 	// Распаковываем тело запроса напрямую, без декодера!
 	messageRequest := request.Body
+
+	// Проверка на nil для messageRequest.Message
+	if messageRequest.Message == nil {
+		return messages.PostMessages201JSONResponse{}, errors.New("message cannot be nil")
+	}
+
 	// Обращаемся к сервису и создаем сообщение
 	messageToCreate := messagesService.Message{Text: *messageRequest.Message}
-	createdMessage, err := h.Service.CreateMessage(messageToCreate)
 
-	if err != nil {
-		return nil, err
+	// Проверка на nil для h.Service
+	if h.Service == nil {
+		return messages.PostMessages201JSONResponse{}, errors.New("service is not initialized")
 	}
+
+	createdMessage, err := h.Service.CreateMessage(messageToCreate)
+	if err != nil {
+		return messages.PostMessages201JSONResponse{}, err
+	}
+
 	// создаем структуру респонс
 	response := messages.PostMessages201JSONResponse{
 		Id:      &createdMessage.ID,
 		Message: &createdMessage.Text,
 	}
+
 	// Просто возвращаем респонс!
 	return response, nil
 }
