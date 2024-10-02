@@ -1,25 +1,25 @@
 package messagesService
 
 type MessageService struct {
-	repo MessageRepository
+	messageRepo MessageRepository
 }
 
-func NewService(repo MessageRepository) *MessageService {
-	return &MessageService{repo: repo}
+func NewService(messageRepo MessageRepository) *MessageService {
+	return &MessageService{messageRepo: messageRepo}
 }
 
 func (s *MessageService) CreateMessage(message Message) (Message, error) {
-	return s.repo.CreateMessage(message)
+	return s.messageRepo.CreateMessage(message)
 }
 
 func (s *MessageService) GetAllMessages() ([]Message, error) {
-	return s.repo.GetAllMessages()
+	return s.messageRepo.GetAllMessages()
 }
 
 func (s *MessageService) UpdateMessageByID(id int, message Message) (Message, error) {
-	return s.repo.UpdateMessageByID(id, message)
+	return s.messageRepo.UpdateMessageByID(id, message)
 }
 
 func (s *MessageService) DeleteMessageByID(id int) error {
-	return s.repo.DeleteMessageByID(id)
+	return s.messageRepo.DeleteMessageByID(id)
 }

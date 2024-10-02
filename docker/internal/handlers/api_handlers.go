@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type Handler struct {
+type MessageHandler struct {
 	Service *messagesService.MessageService
 }
 
 // DeleteMessages implements messages.StrictServerInterface.
-func (h *Handler) DeleteMessages(ctx context.Context, request messages.DeleteMessagesRequestObject) (messages.DeleteMessagesResponseObject, error) {
+func (h *MessageHandler) DeleteMessages(ctx context.Context, request messages.DeleteMessagesRequestObject) (messages.DeleteMessagesResponseObject, error) {
 	messageRequest := request.Body
 	messageToDelete := messagesService.Message{Model: gorm.Model{ID: *messageRequest.Id}}
 	err := h.Service.DeleteMessageByID(int(messageToDelete.ID))
@@ -31,7 +31,7 @@ func (h *Handler) DeleteMessages(ctx context.Context, request messages.DeleteMes
 }
 
 // PatchMessages implements messages.StrictServerInterface.
-func (h *Handler) PatchMessages(ctx context.Context, request messages.PatchMessagesRequestObject) (messages.PatchMessagesResponseObject, error) {
+func (h *MessageHandler) PatchMessages(ctx context.Context, request messages.PatchMessagesRequestObject) (messages.PatchMessagesResponseObject, error) {
 	messageRequest := request.Body
 	messageToUpdate := messagesService.Message{Model: gorm.Model{ID: *messageRequest.Id}, Text: *messageRequest.Message}
 	updatedMessage, err := h.Service.UpdateMessageByID(int(messageToUpdate.ID), messageToUpdate)
@@ -50,7 +50,7 @@ func (h *Handler) PatchMessages(ctx context.Context, request messages.PatchMessa
 }
 
 // GetMessages implements messages.StrictServerInterface.
-func (h *Handler) GetMessages(_ context.Context, _ messages.GetMessagesRequestObject) (messages.GetMessagesResponseObject, error) {
+func (h *MessageHandler) GetMessages(_ context.Context, _ messages.GetMessagesRequestObject) (messages.GetMessagesResponseObject, error) {
 	// Получение всех сообщений из сервиса
 	allMessages, err := h.Service.GetAllMessages()
 	if err != nil {
@@ -74,7 +74,7 @@ func (h *Handler) GetMessages(_ context.Context, _ messages.GetMessagesRequestOb
 	return response, nil
 }
 
-func (h *Handler) PostMessages(_ context.Context, request messages.PostMessagesRequestObject) (messages.PostMessagesResponseObject, error) {
+func (h *MessageHandler) PostMessages(_ context.Context, request messages.PostMessagesRequestObject) (messages.PostMessagesResponseObject, error) {
 	// Распаковываем тело запроса напрямую, без декодера!
 	messageRequest := request.Body
 
@@ -108,8 +108,8 @@ func (h *Handler) PostMessages(_ context.Context, request messages.PostMessagesR
 
 // Нужна для создания структуры Handler на этапе инициализации приложения
 
-func NewHandler(service *messagesService.MessageService) *Handler {
-	return &Handler{
+func NewMessageHandler(service *messagesService.MessageService) *MessageHandler {
+	return &MessageHandler{
 		Service: service,
 	}
 }

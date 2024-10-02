@@ -4,7 +4,9 @@ import (
 	"docker/internal/database"
 	"docker/internal/handlers"
 	"docker/internal/messagesService"
+	"docker/internal/userService"
 	"docker/internal/web/messages"
+	"docker/internal/web/users"
 	"log"
 
 	"github.com/labstack/echo/v4"
@@ -13,15 +15,19 @@ import (
 
 func main() {
 	database.InitDB()
-	err := database.DB.AutoMigrate(&messagesService.Message{})
-	if err != nil {
-		log.Fatal("Automograte error: %w", err)
+	if err := database.DB.AutoMigrate(&messagesService.Message{}); err != nil {
+		log.Fatalf("Ошибка миграции: %v", err)
+	} else if err := database.DB.AutoMigrate(&userService.User{}); err != nil {
+		log.Fatalf("Ошибка миграции: %v", err)
 	}
 
-	repo := messagesService.NewMessageRepository(database.DB)
-	service := messagesService.NewService(repo)
+	messagesRepo := messagesService.NewMessageRepository(database.DB)
+	messagesService := messagesService.NewService(messagesRepo)
+	usersRepo := userService.NewUserRepository(database.DB)
+	usersService := userService.NewService(usersRepo)
 
-	handler := handlers.NewHandler(service)
+	messagesHandler := handlers.NewMessageHandler(messagesService)
+	usersHandler := handlers.NewUserHandler(usersService)
 
 	// Инициализируем echo
 	e := echo.New()
@@ -31,8 +37,10 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Прикол для работы в echo. Передаем и регистрируем хендлер в echo
-	strictHandler := messages.NewStrictHandler(handler, nil) // тут будет ошибка
-	messages.RegisterHandlers(e, strictHandler)
+	strictMessageHandler := messages.NewStrictHandler(messagesHandler, nil) // тут будет ошибка
+	messages.RegisterHandlers(e, strictMessageHandler)
+	strictUserHandler := users.NewStrictHandler(usersHandler, nil) // тут будет ошибка
+	users.RegisterHandlers(e, strictUserHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatalf("failed to start with err: %v", err)
